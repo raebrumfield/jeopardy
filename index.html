@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+
 <meta charset="UTF-8">
 <title>ERG Jeopardy – Modern Edition</title>
 <style>
@@ -17,7 +20,7 @@
     body {
         margin: 0;
         background: var(--bg);
-        font-family: Arial, sans-serif;
+        font-family: 'Poppins', sans-serif;
         color: white;
         display: flex;
         flex-direction: column;
@@ -88,18 +91,21 @@
         flex: 1;
     }
     .tile {
-        background: var(--light-green);
-        color: var(--tile-text);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        font-weight: bold;
-        border-radius: 4px;
-        cursor: pointer;
-        box-shadow: 0 0 4px rgba(0,0,0,0.5);
-        transition: transform 0.1s, box-shadow 0.1s;
-    }
+    background: var(--light-green);
+    color: var(--tile-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 1px;
+    font-weight: 400;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 0 0 4px rgba(0,0,0,0.5);
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
     .tile:hover {
         transform: translateY(-2px);
         box-shadow: 0 0 8px rgba(0,0,0,0.7);
@@ -278,9 +284,6 @@
             <div>Timer:</div>
             <div class="timer-display" id="timer-display">--</div>
             <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                <button class="btn-timer btn-small" data-seconds="15">15s</button>
-                <button class="btn-timer btn-small" data-seconds="30">30s</button>
-                <button class="btn-timer btn-small" data-seconds="60">60s</button>
                 <button class="btn-small" id="timer-stop">Stop</button>
             </div>
         </div>
@@ -466,6 +469,13 @@ const questions = {
         }
     ]
 };
+// Pick one random Daily Double per category
+const dailyDoubles = new Set();
+categories.forEach(cat => {
+    const randomIndex = Math.floor(Math.random() * 5);
+    const ddValue = questions[cat][randomIndex].value;
+    dailyDoubles.add(`${cat}-${ddValue}`);
+});
 
 const finalJeopardy = {
     category: "Academy Awards",
@@ -514,14 +524,35 @@ const closePopupBtn = document.getElementById("close-popup-btn");
 let currentQuestion = null;
 
 function onTileClick(tile, q) {
-    // Autohide tile
     tile.remove();
     currentQuestion = q;
     popupQuestion.textContent = q.clue;
     popupAnswer.textContent = q.answer;
     popupAnswer.style.display = "none";
     popup.style.display = "flex";
+
+    startTimer(15); // AUTO‑START TIMER
 }
+{
+    const key = `${tile.dataset.category}-${tile.dataset.value}`;
+    const isDailyDouble = dailyDoubles.has(key);
+
+    tile.remove(); // autohide tile
+
+    if (isDailyDouble) {
+        popupQuestion.textContent = "🎉 DAILY DOUBLE! 🎉\n\n" + q.clue;
+    } else {
+        popupQuestion.textContent = q.clue;
+    }
+
+    popupAnswer.textContent = q.answer;
+    popupAnswer.style.display = "none";
+    popup.style.display = "flex";
+
+    // Auto‑start timer
+    startTimer(isDailyDouble ? 20 : 15);
+}
+
 
 showAnswerBtn.addEventListener("click", () => {
     popupAnswer.style.display = "block";
@@ -541,7 +572,10 @@ finalBtn.addEventListener("click", () => {
     popupAnswer.textContent = finalJeopardy.answer;
     popupAnswer.style.display = "none";
     popup.style.display = "flex";
+
+    startTimer(30); // AUTO‑START FINAL TIMER
 });
+
 
 /* =========================
    FULL SCREEN
