@@ -152,4 +152,535 @@
         font-weight: bold;
         font-size: 16px;
     }
+    .team-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 4px;
+    }
+    .team-buttons button {
+        background: #063970;
+        color: #fff;
+    }
+    .team-buttons button.add { background: var(--dark-green); }
+    .team-buttons button.sub { background: var(--soft-red); }
 
+    /* Timer */
+    .timer-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 10px;
+    }
+    .timer-display {
+        font-size: 22px;
+        font-weight: bold;
+        text-align: center;
+        padding: 6px;
+        border-radius: 4px;
+        background: #000;
+    }
+
+    /* Popup */
+    #popup {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    #popup-content {
+        background: #003f7f;
+        padding: 24px;
+        border-radius: 8px;
+        border: 3px solid #fff;
+        width: min(800px, 90%);
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    #popup-question {
+        font-size: 22px;
+        text-align: left;
+    }
+    #popup-answer {
+        font-size: 20px;
+        text-align: left;
+        color: var(--gold);
+        display: none;
+    }
+    #popup-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+
+    /* Team selection modal */
+    #team-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.85);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1100;
+    }
+    #team-modal-inner {
+        background: #02213f;
+        padding: 24px;
+        border-radius: 8px;
+        width: min(500px, 90%);
+        text-align: center;
+    }
+    #team-modal-inner h2 {
+        margin-top: 0;
+        margin-bottom: 10px;
+    }
+    .team-count-buttons {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    @media (max-width: 900px) {
+        main {
+            grid-template-columns: 1fr;
+            grid-template-rows: auto auto;
+        }
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>ERG Jeopardy – Modern Edition</h1>
+    <div class="controls">
+        <button class="btn-primary" id="fullscreen-btn">Full Screen</button>
+        <button class="btn-final" id="final-btn">Final Jeopardy</button>
+    </div>
+</header>
+
+<main>
+    <div class="board-wrapper">
+        <div class="categories-row" id="categories-row"></div>
+        <div class="board" id="board"></div>
+    </div>
+
+    <aside class="scoreboard">
+        <h2>Scoreboard</h2>
+
+        <div class="timer-panel">
+            <div>Timer:</div>
+            <div class="timer-display" id="timer-display">--</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button class="btn-timer btn-small" data-seconds="15">15s</button>
+                <button class="btn-timer btn-small" data-seconds="30">30s</button>
+                <button class="btn-timer btn-small" data-seconds="60">60s</button>
+                <button class="btn-small" id="timer-stop">Stop</button>
+            </div>
+        </div>
+
+        <div class="team-list" id="team-list"></div>
+    </aside>
+</main>
+
+<!-- Question popup -->
+<div id="popup">
+    <div id="popup-content">
+        <div id="popup-question"></div>
+        <div id="popup-answer"></div>
+        <div id="popup-buttons">
+            <button class="btn-small btn-primary" id="show-answer-btn">Show Answer</button>
+            <button class="btn-small" id="close-popup-btn">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Team selection modal -->
+<div id="team-modal">
+    <div id="team-modal-inner">
+        <h2>How many teams are playing?</h2>
+        <p>Select a number of teams. You can rename them after.</p>
+        <div class="team-count-buttons">
+            <button class="btn-primary" data-teams="2">2</button>
+            <button class="btn-primary" data-teams="3">3</button>
+            <button class="btn-primary" data-teams="4">4</button>
+            <button class="btn-primary" data-teams="5">5</button>
+            <button class="btn-primary" data-teams="6">6</button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* =========================
+   DATA: CATEGORIES & CLUES
+   ========================= */
+
+const categories = [
+    "Historical VIPs",
+    "Binge-Worthy TV & Film",
+    "The Playlist",
+    "Modern GOATs",
+    "Culture & Trends"
+];
+
+const questions = {
+    "Historical VIPs": [
+        {
+            value: 100,
+            clue: "His 1963 \"I Have a Dream\" speech at the March on Washington is one of the most famous in American history.",
+            answer: "Who is Dr. Martin Luther King Jr.?"
+        },
+        {
+            value: 200,
+            clue: "Her refusal to give up her seat on a Montgomery bus in 1955 helped spark the Civil Rights Movement.",
+            answer: "Who is Rosa Parks?"
+        },
+        {
+            value: 300,
+            clue: "This iconic Mexican artist is instantly recognizable by her vibrant self-portraits, unibrow, and celebration of indigenous culture.",
+            answer: "Who is Frida Kahlo?"
+        },
+        {
+            value: 400,
+            clue: "She famously told the story of her early life in the acclaimed 1969 autobiography \"I Know Why the Caged Bird Sings\".",
+            answer: "Who is Maya Angelou?"
+        },
+        {
+            value: 500,
+            clue: "Alongside Dolores Huerta, this labor leader co-founded the National Farm Workers Association to fight for the rights of agricultural workers.",
+            answer: "Who is Cesar Chavez?"
+        }
+    ],
+    "Binge-Worthy TV & Film": [
+        {
+            value: 100,
+            clue: "Starring Chadwick Boseman, this 2018 Marvel movie became a massive cultural event, introducing the world to Wakanda.",
+            answer: "What is Black Panther?"
+        },
+        {
+            value: 200,
+            clue: "Michelle Yeoh swept the 2023 award season for playing a stressed laundromat owner traveling through the multiverse in this chaotic, beloved film.",
+            answer: "What is Everything Everywhere All at Once?"
+        },
+        {
+            value: 300,
+            clue: "This 2018 rom-com starring Constance Wu and Henry Golding was the first Hollywood studio film in 25 years to feature an all-Asian cast.",
+            answer: "What is Crazy Rich Asians?"
+        },
+        {
+            value: 400,
+            clue: "At age 24, she became the youngest two-time Emmy winner for Lead Actress in a Drama for her role as Rue in HBO's Euphoria.",
+            answer: "Who is Zendaya?"
+        },
+        {
+            value: 500,
+            clue: "Issa Rae created and starred in this hit HBO comedy series that authentically captured the messy, hilarious realities of navigating life and dating in Los Angeles.",
+            answer: "What is Insecure?"
+        }
+    ],
+    "The Playlist": [
+        {
+            value: 100,
+            clue: "The \"BeyHive\" celebrated in 2023 when this Renaissance artist broke the all-time record for the most Grammy wins in history.",
+            answer: "Who is Beyoncé?"
+        },
+        {
+            value: 200,
+            clue: "This K-Pop juggernaut boasts an incredibly loyal fanbase known as the \"ARMY.\"",
+            answer: "Who are BTS?"
+        },
+        {
+            value: 300,
+            clue: "This Puerto Rican superstar broke global streaming records, becoming Spotify's most-streamed artist in the world for three consecutive years (2020-2022).",
+            answer: "Who is Bad Bunny?"
+        },
+        {
+            value: 400,
+            clue: "In 2018, this Compton rapper made history by becoming the first hip-hop artist to win the Pulitzer Prize for Music for his album DAMN.",
+            answer: "Who is Kendrick Lamar?"
+        },
+        {
+            value: 500,
+            clue: "This singer, actress, and billionaire businesswoman famously performed her 2023 Super Bowl Halftime show while pregnant.",
+            answer: "Who is Rihanna?"
+        }
+    ],
+    "Modern GOATs": [
+        {
+            value: 100,
+            clue: "Widely considered the greatest tennis player of all time, she retired in 2022 with 23 Grand Slam singles titles.",
+            answer: "Who is Serena Williams?"
+        },
+        {
+            value: 200,
+            clue: "In 2023, this NBA legend broke Kareem Abdul-Jabbar's all-time scoring record, adding to his \"King\" status.",
+            answer: "Who is LeBron James?"
+        },
+        {
+            value: 300,
+            clue: "This American gymnast is the most decorated in history and has four signature, gravity-defying moves officially named after her.",
+            answer: "Who is Simone Biles?"
+        },
+        {
+            value: 400,
+            clue: "In 2023, this Japanese two-way baseball phenom signed a historic, record-shattering $700 million contract with the LA Dodgers.",
+            answer: "Who is Shohei Ohtani?"
+        },
+        {
+            value: 500,
+            clue: "This four-time Grand Slam tennis champion lit the Olympic cauldron in Tokyo and has been a vocal pioneer for athletes' mental health.",
+            answer: "Who is Naomi Osaka?"
+        }
+    ],
+    "Culture & Trends": [
+        {
+            value: 100,
+            clue: "Invented in Taiwan in the 1980s, this incredibly popular Gen Z drink gets its signature chewy texture from tapioca pearls.",
+            answer: "What is boba (or bubble tea)?"
+        },
+        {
+            value: 200,
+            clue: "Rihanna revolutionized the beauty industry when she launched this makeup brand, setting a new standard by dropping 40 foundation shades on day one.",
+            answer: "What is Fenty Beauty?"
+        },
+        {
+            value: 300,
+            clue: "Michael Jordan's partnership with Nike in the 1980s gave birth to this massive, global subculture of shoe collectors.",
+            answer: "What is sneaker culture (or sneakerheads)?"
+        },
+        {
+            value: 400,
+            clue: "This multi-step South Korean skincare trend took over TikTok and Sephora shelves, popularizing ingredients like snail mucin and sheet masks.",
+            answer: "What is K-Beauty?"
+        },
+        {
+            value: 500,
+            clue: "This spicy, globally loved hot sauce with the iconic green cap is named after a coastal city in Thailand, though it was created in LA by a Vietnamese-American immigrant.",
+            answer: "What is Sriracha?"
+        }
+    ]
+};
+
+const finalJeopardy = {
+    category: "Academy Awards",
+    clue: "In 2023, this acclaimed actress and producer won a Grammy for her audiobook memoir \"Finding Me,\" officially completing her EGOT (Emmy, Grammy, Oscar, Tony).",
+    answer: "Who is Viola Davis?"
+};
+
+/* =========================
+   BUILD BOARD
+   ========================= */
+
+const categoriesRow = document.getElementById("categories-row");
+const board = document.getElementById("board");
+
+function buildBoard() {
+    categories.forEach(cat => {
+        const catDiv = document.createElement("div");
+        catDiv.className = "category";
+        catDiv.textContent = cat;
+        categoriesRow.appendChild(catDiv);
+    });
+
+    categories.forEach(cat => {
+        questions[cat].forEach(q => {
+            const tile = document.createElement("div");
+            tile.className = "tile";
+            tile.textContent = q.value;
+            tile.dataset.category = cat;
+            tile.dataset.value = q.value;
+            tile.addEventListener("click", () => onTileClick(tile, q));
+            board.appendChild(tile);
+        });
+    });
+}
+
+/* =========================
+   POPUP LOGIC
+   ========================= */
+
+const popup = document.getElementById("popup");
+const popupQuestion = document.getElementById("popup-question");
+const popupAnswer = document.getElementById("popup-answer");
+const showAnswerBtn = document.getElementById("show-answer-btn");
+const closePopupBtn = document.getElementById("close-popup-btn");
+
+let currentQuestion = null;
+
+function onTileClick(tile, q) {
+    // Autohide tile
+    tile.remove();
+    currentQuestion = q;
+    popupQuestion.textContent = q.clue;
+    popupAnswer.textContent = q.answer;
+    popupAnswer.style.display = "none";
+    popup.style.display = "flex";
+}
+
+showAnswerBtn.addEventListener("click", () => {
+    popupAnswer.style.display = "block";
+});
+
+closePopupBtn.addEventListener("click", () => {
+    popup.style.display = "none";
+});
+
+/* =========================
+   FINAL JEOPARDY
+   ========================= */
+
+const finalBtn = document.getElementById("final-btn");
+finalBtn.addEventListener("click", () => {
+    popupQuestion.textContent = `Final Jeopardy – ${finalJeopardy.category}\n\n${finalJeopardy.clue}`;
+    popupAnswer.textContent = finalJeopardy.answer;
+    popupAnswer.style.display = "none";
+    popup.style.display = "flex";
+});
+
+/* =========================
+   FULL SCREEN
+   ========================= */
+
+const fullscreenBtn = document.getElementById("fullscreen-btn");
+fullscreenBtn.addEventListener("click", () => {
+    const docEl = document.documentElement;
+    if (!document.fullscreenElement) {
+        if (docEl.requestFullscreen) docEl.requestFullscreen();
+    } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+    }
+});
+
+/* =========================
+   TIMER
+   ========================= */
+
+const timerDisplay = document.getElementById("timer-display");
+const timerButtons = document.querySelectorAll(".btn-timer");
+const timerStopBtn = document.getElementById("timer-stop");
+
+let timerInterval = null;
+let remainingSeconds = 0;
+
+function startTimer(seconds) {
+    if (timerInterval) clearInterval(timerInterval);
+    remainingSeconds = seconds;
+    updateTimerDisplay();
+    timerInterval = setInterval(() => {
+        remainingSeconds--;
+        updateTimerDisplay();
+        if (remainingSeconds <= 0) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            // You can add a sound or visual flash here
+        }
+    }, 1000);
+}
+
+function updateTimerDisplay() {
+    timerDisplay.textContent = remainingSeconds > 0 ? `${remainingSeconds}s` : "--";
+    timerDisplay.style.background = remainingSeconds > 0 ? "#111" : "#000";
+}
+
+timerButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+        const seconds = parseInt(btn.dataset.seconds, 10);
+        startTimer(seconds);
+    });
+});
+
+timerStopBtn.addEventListener("click", () => {
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = null;
+    remainingSeconds = 0;
+    updateTimerDisplay();
+});
+
+/* =========================
+   TEAMS & SCOREBOARD
+   ========================= */
+
+const teamList = document.getElementById("team-list");
+const teamModal = document.getElementById("team-modal");
+const teamCountButtons = document.querySelectorAll("#team-modal-inner button[data-teams]");
+
+let teams = [];
+
+function buildTeams(count) {
+    teams = [];
+    teamList.innerHTML = "";
+    for (let i = 1; i <= count; i++) {
+        const team = { id: i, name: `Team ${i}`, score: 0 };
+        teams.push(team);
+        const teamDiv = document.createElement("div");
+        teamDiv.className = "team";
+
+        const header = document.createElement("div");
+        header.className = "team-header";
+
+        const nameInput = document.createElement("input");
+        nameInput.value = team.name;
+        nameInput.addEventListener("input", () => {
+            team.name = nameInput.value;
+        });
+
+        const scoreSpan = document.createElement("span");
+        scoreSpan.className = "team-score";
+        scoreSpan.textContent = "0";
+
+        header.appendChild(nameInput);
+        header.appendChild(scoreSpan);
+
+        const buttonsDiv = document.createElement("div");
+        buttonsDiv.className = "team-buttons";
+
+        [100,200,300,400,500].forEach(val => {
+            const addBtn = document.createElement("button");
+            addBtn.className = "btn-small add";
+            addBtn.textContent = `+${val}`;
+            addBtn.addEventListener("click", () => {
+                team.score += val;
+                scoreSpan.textContent = team.score;
+            });
+            buttonsDiv.appendChild(addBtn);
+
+            const subBtn = document.createElement("button");
+            subBtn.className = "btn-small sub";
+            subBtn.textContent = `-${val}`;
+            subBtn.addEventListener("click", () => {
+                team.score -= val;
+                scoreSpan.textContent = team.score;
+            });
+            buttonsDiv.appendChild(subBtn);
+        });
+
+        teamDiv.appendChild(header);
+        teamDiv.appendChild(buttonsDiv);
+        teamList.appendChild(teamDiv);
+    }
+}
+
+teamCountButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+        const count = parseInt(btn.dataset.teams, 10);
+        buildTeams(count);
+        teamModal.style.display = "none";
+    });
+});
+
+/* =========================
+   INIT
+   ========================= */
+
+buildBoard();
+// team modal shows by default; board is ready once teams chosen
+</script>
+
+</body>
+</html>
