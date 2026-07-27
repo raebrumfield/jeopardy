@@ -13,7 +13,7 @@
     h1 { margin-top: 20px; }
     .board {
         display: grid;
-        grid-template-columns: repeat(6, 1fr);
+        grid-template-columns: repeat(5, 1fr);
         gap: 5px;
         width: 90%;
         margin: 20px auto;
@@ -53,6 +53,15 @@
         font-size: 20px;
         cursor: pointer;
     }
+    #final-btn {
+        margin-top: 30px;
+        padding: 15px 30px;
+        font-size: 26px;
+        background: gold;
+        color: black;
+        border: 3px solid white;
+        cursor: pointer;
+    }
 </style>
 </head>
 <body>
@@ -61,98 +70,4 @@
 
 <div class="board" id="board"></div>
 
-<div id="popup">
-    <div id="popup-content">
-        <div id="question"></div>
-        <button id="close-btn">Close</button>
-    </div>
-</div>
-
-<script>
-const categories = [
-    "Category 1",
-    "Category 2",
-    "Category 3",
-    "Category 4",
-    "Category 5",
-    "Category 6"
-];
-
-const questions = {
-    "Category 1": [
-        "Question 1 for Cat 1",
-        "Question 2 for Cat 1",
-        "Question 3 for Cat 1",
-        "Question 4 for Cat 1",
-        "Question 5 for Cat 1"
-    ],
-    "Category 2": [
-        "Question 1 for Cat 2",
-        "Question 2 for Cat 2",
-        "Question 3 for Cat 2",
-        "Question 4 for Cat 2",
-        "Question 5 for Cat 2"
-    ],
-    "Category 3": [
-        "Question 1 for Cat 3",
-        "Question 2 for Cat 3",
-        "Question 3 for Cat 3",
-        "Question 4 for Cat 3",
-        "Question 5 for Cat 3"
-    ],
-    "Category 4": [
-        "Question 1 for Cat 4",
-        "Question 2 for Cat 4",
-        "Question 3 for Cat 4",
-        "Question 4 for Cat 4",
-        "Question 5 for Cat 4"
-    ],
-    "Category 5": [
-        "Question 1 for Cat 5",
-        "Question 2 for Cat 5",
-        "Question 3 for Cat 5",
-        "Question 4 for Cat 5",
-        "Question 5 for Cat 5"
-    ],
-    "Category 6": [
-        "Question 1 for Cat 6",
-        "Question 2 for Cat 6",
-        "Question 3 for Cat 6",
-        "Question 4 for Cat 6",
-        "Question 5 for Cat 6"
-    ]
-};
-
-const board = document.getElementById("board");
-const popup = document.getElementById("popup");
-const questionBox = document.getElementById("question");
-const closeBtn = document.getElementById("close-btn");
-
-function buildBoard() {
-    categories.forEach(cat => {
-        questions[cat].forEach((q, i) => {
-            const tile = document.createElement("div");
-            tile.className = "tile";
-            tile.textContent = (i + 1) * 100;
-            tile.onclick = () => showQuestion(tile, q);
-            board.appendChild(tile);
-        });
-    });
-}
-
-function showQuestion(tile, q) {
-    if (tile.classList.contains("used")) return;
-    tile.classList.add("used");
-    questionBox.textContent = q;
-    popup.style.display = "flex";
-}
-
-closeBtn.onclick = () => {
-    popup.style.display = "none";
-};
-
-buildBoard();
-</script>
-
-</body>
-</html>
+<button id="final-btn">Final Jeopardy – Academy Awards</button>
